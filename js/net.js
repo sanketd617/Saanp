@@ -1,21 +1,26 @@
 class Net {
-    constructor(config) {
+    constructor(config, weights) {
         this.layers = [];
         this.weights = [];
         this.config = config;
 
-        for (let n of this.config) this.addLayer(n);
+        if (!weights) for (let n of this.config) this.addLayer(n, false);
+        else {
+            this.weights = weights;
+            for (let n of this.config) this.addLayer(n, true);
+        }
         // console.log(this.weights);
     }
 
-    addLayer(n) {
+    addLayer(n, weightAddedAlready) {
         let layerIndex = this.layers.length;
         this.layers.push(Array(n));
 
         if (layerIndex > 0) {
             let numRows = this.layers[layerIndex].length;
             let numCols = this.layers[layerIndex - 1].length;
-            this.weights.push([...Array(numRows)].map(x => [...Array(numCols)].map(y => Math.random())));
+            if (!weightAddedAlready)
+                this.weights.push([...Array(numRows)].map(x => [...Array(numCols)].map(y => [-1, 1][Math.floor(Math.random() * 2)] * Math.random())));
         }
     }
 

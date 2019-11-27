@@ -28,7 +28,7 @@ window.onload = () => {
     for (let i of range(parseInt(Math.sqrt(total)))) {
         for (let j of range(parseInt(Math.sqrt(total)))) {
             saanp.push(new Saanp(3, ctx, 25, i, j, Math.floor(canvas.width / Math.floor(Math.sqrt(total)))));
-            net.push(new Net([7, 4, 3]));
+            net.push(new Net([7, 14, 10, 6, 3]));
         }
     }
 
@@ -37,7 +37,8 @@ window.onload = () => {
     let steps = 0;
     let phase = 0;
     let maxPhase = 10;
-
+    let generation = 0;
+    console.log("generation", generation);
     setInterval(loop, interval);
 
 
@@ -62,7 +63,7 @@ window.onload = () => {
         }
         steps += 1;
         if (deadCount === total || steps > maxSteps) {
-            console.log("all dead");
+            // console.log("all dead");
             let scores = [];
             for (let i of range(total)) {
                 scores.push({
@@ -76,11 +77,18 @@ window.onload = () => {
             steps = 0;
             phase++;
 
-            if(phase > maxPhase) {
-                console.log("phase", phase, "complete")
+            if (phase > maxPhase) {
+                generation++;
+                console.log("generation", generation);
+                scores = scores.map(s => ({...s, score: s.score / maxPhase}));
                 scores.sort((a, b) => a.score > b.score ? -1 : (a.score < b.score ? 1 : 0));
-                console.log(scores)
+                net = Evolver.generateNewPopulation(net, scores);
                 phase = 0;
+                for (let i of range(total)) {
+                    saanp[i].start(3);
+                    saanp[i].score = 0;
+                    saanp[i].dead = false;
+                }
             }
         }
     }

@@ -15,7 +15,6 @@ class Saanp {
     }
 
     start(initialSize) {
-        this.score = 0;
         this.direction = {x: 1, y: 0};
         this.grid = [];
         for (let i of range(this.numCellsPerRow)) {
@@ -122,15 +121,15 @@ class Saanp {
     isFoodAhead() {
         switch (this.direction.y) {
             case 1:
-                return this.head.x === this.food.x && this.head.y > this.food.x;
+                return this.head.y > this.food.x;
             case -1:
-                return this.head.x === this.food.x && this.head.y < this.food.x;
+                return this.head.y < this.food.x;
         }
         switch (this.direction.x) {
             case 1:
-                return this.head.y === this.food.y && this.food.x > this.head.x;
+                return this.food.x > this.head.x;
             case -1:
-                return this.head.y === this.food.y && this.food.x < this.head.x;
+                return this.food.x < this.head.x;
         }
         return 0;
     }
@@ -138,15 +137,15 @@ class Saanp {
     isFoodBehind() {
         switch (this.direction.y) {
             case 1:
-                return this.head.x === this.food.x && this.head.y < this.food.x;
+                return this.head.y < this.food.x;
             case -1:
-                return this.head.x === this.food.x && this.head.y > this.food.x;
+                return this.head.y > this.food.x;
         }
         switch (this.direction.x) {
             case 1:
-                return this.head.y === this.food.y && this.food.x < this.head.x;
+                return this.food.x < this.head.x;
             case -1:
-                return this.head.y === this.food.y && this.food.x > this.head.x;
+                return this.food.x > this.head.x;
         }
         return 0;
     }
