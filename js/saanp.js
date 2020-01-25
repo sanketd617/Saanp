@@ -1,171 +1,79 @@
 class Saanp {
     constructor(initialSize, ctx, numCells, offsetX, offsetY, canvasSize) {
         this.ctx = ctx;
-        this.numCellsPerRow = numCells;
+        this.gridSize = numCells;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.canvasSize = canvasSize;
-        this.cellSize = this.canvasSize / this.numCellsPerRow;
+        this.cellSize = this.canvasSize / this.gridSize;
         this.food = {x: null, y: null};
+        this.head = {x: null, y: null};
+        this.direction = {x: null, y: null};
         this.dead = false;
         this.eyeSize = 2;
         this.coords = [];
         this.score = 0;
-        this.start(initialSize);
     }
 
-    start(initialSize) {
-        this.direction = {x: 1, y: 0};
-        this.grid = [];
-        for (let i of range(this.numCellsPerRow)) {
-            this.grid.push([]);
-            for (let j of range(this.numCellsPerRow)) {
-                this.grid[i].push(false);
-            }
-        }
-        this.head = {
-            x: Math.floor(Math.random() * (this.numCellsPerRow - 2 * initialSize)) + initialSize,
-            y: Math.floor(Math.random() * (this.numCellsPerRow - 2 * initialSize)) + initialSize
-        };
-
-        this.grid[this.head.x][this.head.y] = true;
-        for (let i = 1; i < initialSize; i++) {
-            this.grid[this.head.x - i * this.direction.x][this.head.y - i * this.direction.y] = true;
-        }
-
-        this.tail = {x: this.head.x - initialSize * this.direction.x, y: this.head.y - initialSize * this.direction.y};
-        this.addFood();
-        this.draw();
-    }
-
-    canMoveRight() {
-        switch (this.direction.y) {
-            case 1:
-                return this.head.x > 0 && !this.grid[this.head.x - 1][this.head.y];
-            case -1:
-                return this.head.x < this.numCellsPerRow - 1 && !this.grid[this.head.x + 1][this.head.y];
-        }
-        switch (this.direction.x) {
-            case -1:
-                return this.head.y > 0 && !this.grid[this.head.x][this.head.y - 1];
-            case 1:
-                return this.head.y < this.numCellsPerRow - 1 && !this.grid[this.head.x][this.head.y + 1];
-        }
-        return 0;
-    }
-
-    canMoveLeft() {
-        switch (this.direction.y) {
-            case -1:
-                return this.head.x > 0 && !this.grid[this.head.x - 1][this.head.y];
-            case 1:
-                return this.head.x < this.numCellsPerRow - 1 && !this.grid[this.head.x + 1][this.head.y];
-        }
-        switch (this.direction.x) {
-            case 1:
-                return this.head.y > 0 && !this.grid[this.head.x][this.head.y - 1];
-            case -1:
-                return this.head.y < this.numCellsPerRow - 1 && !this.grid[this.head.x][this.head.y + 1];
-        }
-        return 0;
-    }
-
-    canMoveFront() {
-        switch (this.direction.y) {
-            case -1:
-                return this.head.y > 0 && !this.grid[this.head.x][this.head.y - 1];
-            case 1:
-                return this.head.y < this.numCellsPerRow - 1 && !this.grid[this.head.x][this.head.y + 1];
-        }
-        switch (this.direction.x) {
-            case -1:
-                return this.head.x > 0 && !this.grid[this.head.x - 1][this.head.y];
-            case 1:
-                return this.head.x < this.numCellsPerRow - 1 && !this.grid[this.head.x + 1][this.head.y];
-        }
-        return 0;
-    }
-
-    isFoodToLeft() {
-        switch (this.direction.y) {
-            case 1:
-                return this.head.x < this.food.x;
-            case -1:
-                return this.head.x > this.food.x;
-        }
-        switch (this.direction.x) {
-            case -1:
-                return this.head.y > this.food.y;
-            case 1:
-                return this.head.y < this.food.y;
-        }
-        return 0;
-    }
-
-    isFoodToRight() {
-        switch (this.direction.y) {
-            case 1:
-                return this.head.x > this.food.x;
-            case -1:
-                return this.head.x < this.food.x;
-        }
-        switch (this.direction.x) {
-            case -1:
-                return this.head.y < this.food.y;
-            case 1:
-                return this.head.y > this.food.y;
-        }
-        return 0;
-    }
-
-    isFoodAhead() {
-        switch (this.direction.y) {
-            case 1:
-                return this.head.y > this.food.x;
-            case -1:
-                return this.head.y < this.food.x;
-        }
-        switch (this.direction.x) {
-            case 1:
-                return this.food.x > this.head.x;
-            case -1:
-                return this.food.x < this.head.x;
-        }
-        return 0;
-    }
-
-    isFoodBehind() {
-        switch (this.direction.y) {
-            case 1:
-                return this.head.y < this.food.x;
-            case -1:
-                return this.head.y > this.food.x;
-        }
-        switch (this.direction.x) {
-            case 1:
-                return this.food.x < this.head.x;
-            case -1:
-                return this.food.x > this.head.x;
-        }
-        return 0;
-    }
-
-
-    addFood() {
+    static getFood(grid, gridSize) {
         let availablePositions = [];
-        for (let i = 0; i < this.numCellsPerRow; i++) {
-            for (let j = 0; j < this.numCellsPerRow; j++) {
-                if (!this.grid[i][j]) {
+        let count = 0;
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                if (!grid[i][j]) {
                     availablePositions.push({x: i, y: j});
+                    count++;
                 }
             }
         }
-        let chosenPosition = availablePositions[Math.floor(Math.random() * availablePositions.length)];
-        this.food = {
+
+        let index = Math.floor(Math.random() * availablePositions.length);
+        let chosenPosition = availablePositions[index];
+
+        return {
             x: chosenPosition.x,
             y: chosenPosition.y
         };
-        this.drawFood();
+    }
+
+    static random(length, gridSize) {
+        let xx = [0, 1, 0, -1];
+        let yy = [1, 0, -1, 0];
+        let index = Math.floor(Math.random() * 4);
+        let direction = {x: xx[index], y: yy[index]};
+        let grid = [];
+        for (let i of range(gridSize)) {
+            grid.push([]);
+            for (let j of range(gridSize)) {
+                grid[i].push(false);
+            }
+        }
+
+        let head = {
+            // x: Math.floor(Math.random() * (gridSize - 2 * length)) + length,
+            // y: Math.floor(Math.random() * (gridSize - 2 * length)) + length
+            y: 1,
+            x: 10
+        };
+
+        grid[head.x][head.y] = true;
+        for (let i = 1; i < length; i++) {
+            grid[head.x - i * direction.x][head.y - i * direction.y] = true;
+        }
+
+        let tail = {x: head.x - length * direction.x, y: head.y - length * direction.y};
+        let food = Saanp.getFood(grid, gridSize);
+        return {
+            direction, grid, head, tail, food
+        }
+    }
+
+    start(random) {
+        this.direction = {x: random.direction.x, y: random.direction.y};
+        this.grid = random.grid.map(x => (x.map(y => y)));
+        this.head = {x: random.head.x, y: random.head.y};
+        this.tail = {x: random.tail.x, y: random.tail.y};
+        this.food = {x: random.food.x, y: random.food.y};
     }
 
     distanceFromFood() {
@@ -176,7 +84,6 @@ class Saanp {
         if (!isNaN(d)) {
             d = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'][d];
         }
-        // console.log("direction", d)
         switch (d) {
             case 'ArrowUp':
                 if (this.direction.y === 1) return;
@@ -214,7 +121,7 @@ class Saanp {
             for (let i of range(4)) {
                 let nx = front.x + xx[i];
                 let ny = front.y + yy[i];
-                if (nx >= 0 && nx < this.numCellsPerRow && ny >= 0 && ny < this.numCellsPerRow) {
+                if (nx >= 0 && nx < this.gridSize && ny >= 0 && ny < this.gridSize) {
                     let flag = false;
                     if (v[nx]) {
                         if (v[nx][ny]) {
@@ -238,10 +145,10 @@ class Saanp {
 
     update() {
         if (this.dead) return;
-        if (this.head.x + this.direction.x < 0 || this.head.x + this.direction.x >= this.numCellsPerRow
-            || this.head.y + this.direction.y < 0 || this.head.y + this.direction.y >= this.numCellsPerRow) {
+        if (this.head.x + this.direction.x < 0 || this.head.x + this.direction.x >= this.gridSize
+            || this.head.y + this.direction.y < 0 || this.head.y + this.direction.y >= this.gridSize) {
             this.dead = true;
-            this.score -= 1000;
+            this.score -= 100;
             return;
         }
 
@@ -249,24 +156,25 @@ class Saanp {
 
         for (let i = 1; i < this.coords.length; i++) {
             if (this.head.x === this.coords[i].x && this.head.y === this.coords[i].y) {
-                this.dead = true;
-                this.score -= 1000;
+                // this.dead = true;
+                this.score -= 100;
                 return;
             }
         }
 
-        let d1 = this.distanceFromFood();
+        // let d1 = this.distanceFromFood();
         this.head = {x: this.head.x + this.direction.x, y: this.head.y + this.direction.y};
-        let d2 = this.distanceFromFood();
-        if (d2 < d1) {
-            this.score += 10;
-        } else {
-            this.score -= 10;
-        }
+        // let d2 = this.distanceFromFood();
+        // if (d2 < d1) {
+            // this.score += 10;
+        // } else {
+            // this.score -= 10;
+        // }
+        this.score += 10;
         this.coords.unshift({...this.head});
         this.grid[this.head.x][this.head.y] = true;
         if (this.head.x === this.food.x && this.head.y === this.food.y) {
-            this.addFood();
+            this.food = Saanp.getFood(this.grid, this.gridSize);
             this.score += 500;
         } else {
             let tail = this.coords.pop();
@@ -303,5 +211,118 @@ class Saanp {
         this.drawEye();
         this.drawBorders();
         this.coords = [];
+    }
+
+
+    canMoveRight() {
+        switch (this.direction.y) {
+            case 1:
+                return this.head.x > 0 && !this.grid[this.head.x - 1][this.head.y];
+            case -1:
+                return this.head.x < this.gridSize - 1 && !this.grid[this.head.x + 1][this.head.y];
+        }
+        switch (this.direction.x) {
+            case -1:
+                return this.head.y > 0 && !this.grid[this.head.x][this.head.y - 1];
+            case 1:
+                return this.head.y < this.gridSize - 1 && !this.grid[this.head.x][this.head.y + 1];
+        }
+        return 0;
+    }
+
+    canMoveLeft() {
+        switch (this.direction.y) {
+            case -1:
+                return this.head.x > 0 && !this.grid[this.head.x - 1][this.head.y];
+            case 1:
+                return this.head.x < this.gridSize - 1 && !this.grid[this.head.x + 1][this.head.y];
+        }
+        switch (this.direction.x) {
+            case 1:
+                return this.head.y > 0 && !this.grid[this.head.x][this.head.y - 1];
+            case -1:
+                return this.head.y < this.gridSize - 1 && !this.grid[this.head.x][this.head.y + 1];
+        }
+        return 0;
+    }
+
+    canMoveFront() {
+        switch (this.direction.y) {
+            case -1:
+                return this.head.y > 0 && !this.grid[this.head.x][this.head.y - 1];
+            case 1:
+                return this.head.y < this.gridSize - 1 && !this.grid[this.head.x][this.head.y + 1];
+        }
+        switch (this.direction.x) {
+            case -1:
+                return this.head.x > 0 && !this.grid[this.head.x - 1][this.head.y];
+            case 1:
+                return this.head.x < this.gridSize - 1 && !this.grid[this.head.x + 1][this.head.y];
+        }
+        return 0;
+    }
+
+    isFoodToLeft() {
+        switch (this.direction.y) {
+            case 1:
+                return this.head.x < this.food.x ? 1 : 0;
+            case -1:
+                return this.head.x > this.food.x ? 1 : 0;
+        }
+        switch (this.direction.x) {
+            case -1:
+                return this.head.y < this.food.y ? 1 : 0;
+            case 1:
+                return this.head.y > this.food.y ? 1 : 0;
+        }
+        return 0;
+    }
+
+    isFoodToRight() {
+        switch (this.direction.y) {
+            case 1:
+                return this.head.x > this.food.x ? 1 : 0;
+            case -1:
+                return this.head.x < this.food.x ? 1 : 0;
+        }
+        switch (this.direction.x) {
+            case -1:
+                return this.head.y > this.food.y ? 1 : 0;
+            case 1:
+                return this.head.y < this.food.y ? 1 : 0;
+        }
+        return 0;
+    }
+
+    isFoodAhead() {
+        switch (this.direction.y) {
+            case 1:
+                return this.food.y > this.head.y ? 1 : 0;
+            case -1:
+                return this.food.y < this.head.y ? 1 : 0;
+        }
+        switch (this.direction.x) {
+            case 1:
+                return this.food.x > this.head.x ? 1 : 0;
+            case -1:
+                return this.food.x < this.head.x ? 1 : 0;
+        }
+        return 0;
+    }
+
+    isFoodBehind() {
+        switch (this.direction.y) {
+            case 1:
+                return this.head.y < this.food.x;
+            case -1:
+                return this.head.y > this.food.x;
+        }
+        switch (this.direction.x) {
+            case 1:
+                return this.food.x < this.head.x;
+            case -1:
+                return this.food.x > this.head.x;
+        }
+        return 0;
     }
 }

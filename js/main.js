@@ -24,11 +24,16 @@ window.onload = () => {
 
     let saanp = [];
     let net = [];
+    let pixels = 25;
+    let defaultSize = 5;
+    let randomSaanp = Saanp.random(defaultSize, pixels);
+
 
     for (let i of range(parseInt(Math.sqrt(total)))) {
         for (let j of range(parseInt(Math.sqrt(total)))) {
-            saanp.push(new Saanp(3, ctx, 25, i, j, Math.floor(canvas.width / Math.floor(Math.sqrt(total)))));
-            net.push(new Net([7, 14, 10, 6, 3]));
+            saanp.push(new Saanp(defaultSize, ctx, pixels, i, j, Math.floor(canvas.width / Math.floor(Math.sqrt(total)))));
+            saanp[saanp.length - 1].start(randomSaanp);
+            net.push(new Net([6, 9, 3]));
         }
     }
 
@@ -36,7 +41,7 @@ window.onload = () => {
     let maxSteps = 1000;
     let steps = 0;
     let phase = 0;
-    let maxPhase = 10;
+    let maxPhase = 1;
     let generation = 0;
     console.log("generation", generation);
     setInterval(loop, interval);
@@ -55,37 +60,36 @@ window.onload = () => {
                     saanp[i].isFoodToLeft(),
                     saanp[i].isFoodToRight(),
                     saanp[i].isFoodAhead(),
-                    saanp[i].isFoodBehind()
                 ]));
             } else {
                 deadCount++;
             }
         }
+
         steps += 1;
         if (deadCount === total || steps > maxSteps) {
-            // console.log("all dead");
+            randomSaanp = Saanp.random(defaultSize, saanp[0].gridSize);
             let scores = [];
             for (let i of range(total)) {
                 scores.push({
                     index: i,
                     score: saanp[i].score
                 });
-                saanp[i].start(3);
                 saanp[i].dead = false;
+                saanp[i].start(randomSaanp);
             }
 
             steps = 0;
             phase++;
-
-            if (phase > maxPhase) {
+            if (phase === maxPhase) {
                 generation++;
+
                 console.log("generation", generation);
                 scores = scores.map(s => ({...s, score: s.score / maxPhase}));
                 scores.sort((a, b) => a.score > b.score ? -1 : (a.score < b.score ? 1 : 0));
                 net = Evolver.generateNewPopulation(net, scores);
                 phase = 0;
                 for (let i of range(total)) {
-                    saanp[i].start(3);
                     saanp[i].score = 0;
                     saanp[i].dead = false;
                 }

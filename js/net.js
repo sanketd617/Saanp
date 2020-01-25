@@ -35,13 +35,13 @@ class Net {
                 }
             }
 
-            if (i !== this.weights.length - 1)
+            // if (i !== this.weights.length - 1)
                 this.layers[i + 1] = this.layers[i + 1].map(this.activate);
         }
-        let sum = 0;
-        for (let x of this.layers[this.weights.length])
-            sum += x;
-        this.layers[this.layers.length - 1] = this.layers[this.layers.length - 1].map(e => e / sum);
+        // let sum = 0;
+        // for (let x of this.layers[this.weights.length])
+        //     sum += x;
+        // this.layers[this.layers.length - 1] = this.layers[this.layers.length - 1].map(e => e / sum);
 
         let maxIndex = 0;
         for (let i = 1; i < this.layers[this.layers.length - 1].length; i++) {
@@ -57,7 +57,7 @@ class Net {
     }
 
     activate(x) {
-        return 1 / (1 + Math.exp(x));
+        return x > 0 ? x : 0.25 * x;
     }
 }
 
